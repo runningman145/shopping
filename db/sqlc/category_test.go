@@ -11,7 +11,7 @@ import (
 )
 
 func createRandomCategory(t *testing.T) Category {
-	category, err := testQueries.CreateCategory(context.Background(), util.RandomCategoryName())
+	category, err := testQueries.CreateCategory(context.Background(), util.RandomName())
 	require.NoError(t, err)
 	require.NotEmpty(t, category)
 	
@@ -47,7 +47,7 @@ func TestUpdateCategory(t *testing.T) {
 
 	arg := UpdateCategoryParams{
 		ID: category1.ID,
-		Name: util.RandomCategoryName(),
+		Name: util.RandomName(),
 	}
 
 	category2, err := testQueries.UpdateCategory(context.Background(), arg)

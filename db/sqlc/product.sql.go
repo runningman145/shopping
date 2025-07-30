@@ -15,10 +15,11 @@ INSERT INTO products (
   size,
   weight,
   price,
+  user_id,
   category_id
 ) VALUES (
-  $1, $2, $3, $4, $5
-) RETURNING id, name, size, weight, price, category_id, created_at, updated_at
+  $1, $2, $3, $4, $5, $6
+) RETURNING id, name, size, weight, price, category_id, created_at, updated_at, user_id
 `
 
 type CreateProductParams struct {
@@ -26,6 +27,7 @@ type CreateProductParams struct {
 	Size       string `json:"size"`
 	Weight     int64  `json:"weight"`
 	Price      int64  `json:"price"`
+	UserID     int64  `json:"user_id"`
 	CategoryID int64  `json:"category_id"`
 }
 
@@ -35,6 +37,7 @@ func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (P
 		arg.Size,
 		arg.Weight,
 		arg.Price,
+		arg.UserID,
 		arg.CategoryID,
 	)
 	var i Product
@@ -47,6 +50,7 @@ func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (P
 		&i.CategoryID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UserID,
 	)
 	return i, err
 }
@@ -62,7 +66,7 @@ func (q *Queries) DeleteProduct(ctx context.Context, id int64) error {
 }
 
 const getProduct = `-- name: GetProduct :one
-SELECT id, name, size, weight, price, category_id, created_at, updated_at FROM products
+SELECT id, name, size, weight, price, category_id, created_at, updated_at, user_id FROM products
 WHERE id = $1 LIMIT 1
 `
 
@@ -78,12 +82,13 @@ func (q *Queries) GetProduct(ctx context.Context, id int64) (Product, error) {
 		&i.CategoryID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UserID,
 	)
 	return i, err
 }
 
 const listProducts = `-- name: ListProducts :many
-SELECT id, name, size, weight, price, category_id, created_at, updated_at FROM products
+SELECT id, name, size, weight, price, category_id, created_at, updated_at, user_id FROM products
 ORDER BY id
 LIMIT $1
 OFFSET $2
@@ -112,6 +117,7 @@ func (q *Queries) ListProducts(ctx context.Context, arg ListProductsParams) ([]P
 			&i.CategoryID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.UserID,
 		); err != nil {
 			return nil, err
 		}
@@ -133,7 +139,7 @@ UPDATE products
   weight = $4,
   price = $5
 WHERE id = $1
-RETURNING id, name, size, weight, price, category_id, created_at, updated_at
+RETURNING id, name, size, weight, price, category_id, created_at, updated_at, user_id
 `
 
 type UpdateProductParams struct {
@@ -162,6 +168,7 @@ func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (P
 		&i.CategoryID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UserID,
 	)
 	return i, err
 }

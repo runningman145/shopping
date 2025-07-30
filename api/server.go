@@ -1,28 +1,72 @@
 package api
 
 import (
+	"fmt"
+	"time"
 	db "shopping/db/sqlc"
+	"shopping/token"
+	"shopping/util"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 // server serves HTTP requests for our shopping service
 type Server struct {
-	store *db.Store
-	router *gin.Engine
+	config 	   util.Config
+	tokenMaker token.Maker
+	store 	   *db.Store
+	router 	   *gin.Engine
 }
 
-func NewServer(store *db.Store) *Server {
-	server := &Server{store: store}
+func NewServer(config util.Config, store *db.Store) (*Server, error) {
+	tokenMaker, err := token.NewJWTMaker(config.Token)
+	if err != nil {
+		return nil, fmt.Errorf("cannot create token maker: %w", err)
+	}
+
+	server := &Server{
+		config:		config,
+		store: 		store,
+		tokenMaker: tokenMaker,
+	}
+
+	server.setupRouter()
+	return server, nil
+}
+
+func (server *Server) setupRouter() {
 	router := gin.Default()
 
-	// add routes to router
-	router.POST("/products", server.createProduct)
-	router.GET("/products/:id", server.getProduct)
+	// Configure CORS
+	config := cors.Config{
+		AllowOrigins:     []string{"http://localhost:5173"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}
+	router.Use(cors.New(config))
+
+	router.POST("/users", server.createUser)
+	router.POST("users/login", server.loginUser)
+	router.GET("/categories/:id", server.getCategory)
+	router.GET("/categories", server.listCategories)
 	router.GET("/products", server.listProducts)
 
+	authRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
+
+	authRoutes.POST("/categories", server.createCategory)
+	authRoutes.DELETE("/categories/:id", server.deleteCategory)
+	authRoutes.PUT("/categories/:id", server.updateCategory)
+
+	authRoutes.POST("/products", server.createProduct)
+	authRoutes.GET("/products/:id", server.getProduct)
+	authRoutes.DELETE("/products/:id", server.deleteProduct)
+	authRoutes.PUT("/products/:id", server.updateProduct)
+
 	server.router = router
-	return server
 }
 
 // Start runs the HTTP server on a specific address

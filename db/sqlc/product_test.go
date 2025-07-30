@@ -11,11 +11,14 @@ import (
 )
 
 func createRandomProduct(t *testing.T) Product {
+	user := createRandomUser(t)
+
 	arg := CreateProductParams{
-		Name: util.RandomProductName(),
+		Name: util.RandomName(),
 		Size: util.RandomProductSize(),
 		Weight: util.RandomProductWeight(),
 		Price: util.RandomProductPrice(),
+		UserID: user.ID,
 		CategoryID: util.RandomCategoryID(), // assign categoryID randomly
 	}
 
@@ -61,7 +64,7 @@ func TestUpdateProduct(t *testing.T) {
 
 	arg := UpdateProductParams{
 		ID: product1.ID,
-		Name: util.RandomProductName(),
+		Name: util.RandomName(),
 		Size: util.RandomProductSize(),
 		Weight: util.RandomProductWeight(),
 		Price: util.RandomProductPrice(),

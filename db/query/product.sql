@@ -4,10 +4,12 @@ INSERT INTO products (
   size,
   weight,
   price,
+  user_id,
   category_id
 ) VALUES (
-  $1, $2, $3, $4, $5
+  $1, $2, $3, $4, $5, $6
 ) RETURNING *;
+
 
 -- name: GetProduct :one
 SELECT * FROM products
@@ -18,6 +20,13 @@ SELECT * FROM products
 ORDER BY id
 LIMIT $1
 OFFSET $2;
+-- name: ListProductsWithCategory :many
+SELECT * FROM products
+JOIN categories ON products.category_id = categories.id
+WHERE categories.name = $1
+ORDER BY id
+LIMIT $2
+OFFSET $3;
 
 -- name: UpdateProduct :one
 UPDATE products

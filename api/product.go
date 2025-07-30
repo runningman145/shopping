@@ -4,31 +4,57 @@ import (
 	"database/sql"
 	"net/http"
 	db "shopping/db/sqlc"
+	"shopping/token"
 
 	"github.com/gin-gonic/gin"
 )
 
 type createProductRequest struct {
-	Name       string `json:"name" binding:"required"`
-	Size       string `json:"size" binding:"required"`
-	Weight     int64  `json:"weight"`
-	Price      int64  `json:"price" binding:"required"`
-	CategoryID int64  `json:"category_id"`
+	Name      	 string `json:"name" binding:"required"`
+	Size      	 string `json:"size" binding:"required"`
+	Weight    	 int64  `json:"weight"`
+	Price      	 int64  `json:"price" binding:"required"`
+	CategoryName string `json:"category_name" binding:"required"`
+}
+
+type createProductResponse struct {
+	ID			 int64  `json:"id"`
+	Name      	 string `json:"name"`
+	Size      	 string `json:"size"`
+	Weight    	 int64  `json:"weight"`
+	Price      	 int64  `json:"price"`
+	CategoryName string `json:"category_name"`
 }
 
 func (server *Server) createProduct(ctx *gin.Context) {
 	var req createProductRequest
+
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
+	category, err := server.store.GetCategoryByName(ctx, req.CategoryName)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	// Get user by username to get the user ID
+	user, err := server.store.GetUser(ctx, authPayload.Username)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
 	arg := db.CreateProductParams{
-		Name: 		req.Name,
-		Size: 		req.Size,
-		Weight: 	req.Weight,
-		Price: 		req.Price,
-		CategoryID: req.CategoryID,
+		Name:       req.Name,
+		Size:       req.Size,
+		Weight:     req.Weight,
+		Price:      req.Price,
+		UserID:     user.ID,
+		CategoryID: category.ID,
 	}
 
 	// insert product into database if request is okay
@@ -38,7 +64,16 @@ func (server *Server) createProduct(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, product)
+	res := createProductResponse{
+		ID: product.ID,
+		Name: product.Name,
+		Size: product.Size,
+		Weight: product.Weight,
+		Price: product.Price,
+		CategoryName: category.Name,
+	}
+
+	ctx.JSON(http.StatusOK, res)
 }
 
 type getProductRequest struct {
@@ -91,3 +126,55 @@ func (server *Server) listProducts(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, products)
 }
 
+// delete product by id
+type deleteProductRequest struct {
+	ID int64 `uri:"id" binding:"required,min=1"`
+}
+
+func (server *Server) deleteProduct(ctx *gin.Context) {
+	var req deleteProductRequest
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	err := server.store.DeleteProduct(ctx, req.ID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.Status(http.StatusNoContent)
+}
+
+type updateProductRequest struct {
+	ID     int64  `json:"id" binding:"required"`
+	Name   string `json:"name"`
+	Size   string `json:"size"`
+	Weight int64  `json:"weight"` 
+	Price  int64  `json:"price"`
+}
+
+func (server *Server) updateProduct(ctx *gin.Context) {
+	var req updateProductRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return 
+	}
+
+	arg := db.UpdateProductParams{
+		ID: req.ID,
+		Name: req.Name,
+		Size: req.Size,
+		Weight: req.Weight,
+		Price: req.Price,
+	}
+
+	product, err := server.store.UpdateProduct(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, product)
+}

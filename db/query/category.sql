@@ -8,6 +8,10 @@ ORDER BY id
 LIMIT $1
 OFFSET $2;
 
+-- name: GetCategoryByName :one
+SELECT * FROM categories
+WHERE name = $1 LIMIT 1;
+
 -- name: CreateCategory :one
 INSERT INTO categories (
   name

@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"math/rand"
 	"strings"
 	"time"
@@ -28,12 +29,11 @@ func RandomString(n int) string {
 	return sb.String()
 }
 
-// RandomProduct generates a random product name
-func RandomProductName() string {
+// Random generates a random name
+func RandomName() string {
 	return RandomString(8)
 }
 
-// TODO: handle the seeding issue from random
 // RandomProduct size
 func RandomProductSize() string {
 	sizes := []string{"S", "M", "L", "XL"}
@@ -52,13 +52,12 @@ func RandomProductPrice() int64 {
 	return RandomInt(5000, 250000)
 }
 
-// randomCategory
-func RandomCategoryName() string {
-	return RandomString(6)
-}
-
 // randomcategory assignment to a product, should be one of the categories in the categories table
 func RandomCategoryID() int64 {
 	// For demonstration, return a random category ID between 1 and 10
 	return RandomInt(1, 10)
+}
+
+func RandomEmail() string {
+	return fmt.Sprintf("%s@example.com", RandomString(6))
 }

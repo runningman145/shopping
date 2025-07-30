@@ -24,4 +24,16 @@ type Product struct {
 	CategoryID int64     `json:"category_id"`
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
+	UserID     int64     `json:"user_id"`
+}
+
+type User struct {
+	ID                int64     `json:"id"`
+	Username          string    `json:"username"`
+	HashedPassword    string    `json:"hashed_password"`
+	FullName          string    `json:"full_name"`
+	Email             string    `json:"email"`
+	ChangedPasswordAt time.Time `json:"changed_password_at"`
+	CreatedAt         time.Time `json:"created_at"`
+	Role              string    `json:"role"`
 }
