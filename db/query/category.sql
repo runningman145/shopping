@@ -14,9 +14,10 @@ WHERE name = $1 LIMIT 1;
 
 -- name: CreateCategory :one
 INSERT INTO categories (
-  name
+  name,
+  description
 ) VALUES (
-  $1
+  $1, $2
 ) RETURNING *;
 
 -- name: UpdateCategory :one

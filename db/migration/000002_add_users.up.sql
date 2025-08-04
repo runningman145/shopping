@@ -9,6 +9,8 @@ CREATE TABLE "users" (
   "role" text NOT NULL DEFAULT 'user'
 );
 
+ALTER TABLE "categories" ADD COLUMN "description" TEXT NOT NULL;
+
 ALTER TABLE "products" ADD COLUMN "user_id" BIGINT NOT NULL;
 
 ALTER TABLE "products" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");

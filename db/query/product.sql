@@ -20,11 +20,12 @@ SELECT * FROM products
 ORDER BY id
 LIMIT $1
 OFFSET $2;
+
 -- name: ListProductsWithCategory :many
 SELECT * FROM products
 JOIN categories ON products.category_id = categories.id
 WHERE categories.name = $1
-ORDER BY id
+ORDER BY products.id
 LIMIT $2
 OFFSET $3;
 
@@ -35,8 +36,9 @@ UPDATE products
   weight = $4,
   price = $5
 WHERE id = $1
+AND user_id = $6
 RETURNING *;
 
 -- name: DeleteProduct :exec
 DELETE FROM products
-WHERE id = $1;
+WHERE id = $1 AND user_id = $2;

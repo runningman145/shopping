@@ -1,3 +1,5 @@
+ALTER TABLE "categories" DROP COLUMN "description";
+
 ALTER TABLE IF EXISTS "products" DROP CONSTRAINT IF EXISTS "user_id";
 
 ALTER TABLE "products" DROP COLUMN "user_id";

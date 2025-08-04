@@ -85,7 +85,10 @@ func TestUpdateProduct(t *testing.T) {
 
 func TestDeleteProduct(t *testing.T) {
 	product1 := createRandomProduct(t)
-	err := testQueries.DeleteProduct(context.Background(), product1.ID)
+	arg := DeleteProductParams{
+		ID: product1.ID,
+	}
+	err := testQueries.DeleteProduct(context.Background(), arg)
 	require.NoError(t, err)
 
 	product2, err := testQueries.GetProduct(context.Background(), product1.ID)

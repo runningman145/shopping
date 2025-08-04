@@ -9,26 +9,40 @@ import (
 )
 
 type createCategoryRequest struct {
-	Name string `json:"name" binding:"required"`
+	Name        string `json:"name" binding:"required"`
+	Description string `json:"description" binding:"required"`
+}
+
+type createCategoryResponse struct {
+	Name 		string `json:"name"`
+	Description string `json:"description"`
 }
 
 func (server *Server) createCategory(ctx *gin.Context) {
 	var req createCategoryRequest
-	if err := ctx.ShouldBindUri(&req); err != nil {
+	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	arg := req.Name
+	arg := db.CreateCategoryParams{
+		Name:        req.Name,
+		Description: req.Description,
+	}
 
-	// insert product name into the database
+	// insert category into the database
 	category, err := server.store.CreateCategory(ctx, arg)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, category)
+	res := createCategoryResponse{
+		Name: category.Name,
+		Description: category.Description,
+	}
+
+	ctx.JSON(http.StatusOK, res)
 }
 
 // get category by id
@@ -57,7 +71,7 @@ func (server *Server) getCategory(ctx *gin.Context) {
 }
 
 type listCategoryRequest struct {
-	PageID 	 int32 `form:"page_id" binding:"required,min=1"`
+	PageID   int32 `form:"page_id" binding:"required,min=1"`
 	PageSize int32 `form:"page_size" binding:"required,min=5,max=10"`
 }
 
@@ -69,7 +83,7 @@ func (server *Server) listCategories(ctx *gin.Context) {
 	}
 
 	arg := db.ListCategoriesParams{
-		Limit: req.PageSize,
+		Limit:  req.PageSize,
 		Offset: (req.PageID - 1) * req.PageSize,
 	}
 
